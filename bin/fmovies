@@ -3,6 +3,7 @@
 import subprocess
 import sys
 import six
+import argparse
 from datetime import datetime
 
 import requests
@@ -175,25 +176,13 @@ def test_system():
             subprocess.check_call('sudo pip install youtube-dl', shell=True)
 
 
-def get_input():
-    """Gets the input from user and formats it."""
-    try:
-        query = ' '.join(sys.argv[1:])
-        movie_name = ' '.join(query.split()[0:])
-        return movie_name
-    except Exception as e:
-        print(e)
-        exit()
-    return query
-
-
 def download_episodes(movie_name, url, counter):
     print('Downloading episode: {0} {1}'.format(movie_name, counter))
     command = 'youtube-dl ' + url + ' -o "' + movie_name + ' Episode ' + str(counter) + '"'
     subprocess.check_call(command, shell=True)
 
 
-def get_episodes(movie_name, url):
+def get_episodes(movie_name, url, domain):
     resp = requests.get(url)
     soup = BeautifulSoup(resp.text, 'html.parser')
     data_ts_elem = soup.find("html")
@@ -206,6 +195,7 @@ def get_episodes(movie_name, url):
         count = len(episodes)
         episode_list.append({'episode_list': episodes, 'count': count, 'index': index, 'server_id': server_id})
     max_episodes = max([a['count'] for a in episode_list])
+    print("Found {0} episodes.".format(max_episodes))
     max_episode_list = []
     for a in episode_list:
         server_id = a['server_id']
@@ -213,19 +203,19 @@ def get_episodes(movie_name, url):
             for b in a['episode_list']:
                 max_episode_list.append(b.get('href').split('/')[-1])
             break
-    video_finder = "https://bmovies.to/grabber-api/"
+    video_finder = domain + "/grabber-api/"
     params = {
-        'token': 'IFmEgNFcXOoGvJbTmZ6BOB6E0M54yvgN5keGw7RT0xtC2Jsxpgzzd/k68q75/o/NkmSJB1W4nv/vwxFg4iUHD0L7IQG7avYOQUxUtIIgBNXPQAvWyOR5RdpVk8ebyk0CGomF8gFT',
-        'server': server_id,
-        'options': 'options',
-        'mobile': 0,
-        'ts': data_ts,
-        '_': 2513,
-        'id': ''
+        'token': 'IFmEgNFcXOoGvJbTmZ6BOB6E0M54yvgN5keGw7RT0xtCj54csQiXe/tAlv/P57uZznG2N3K5npqR4Rh@8AUNCxD7IQG7avYOQVlCqJgkFtfZDlbHne98WpBZk9iEy00YBoiN/xxSO00Ggw==',
+        'server': str(server_id),
+        'options': 'LhyCgccIA7AF@9rJhcmTKFDS2t4zyugor1OVyKgG/U4QltZJgwjbWMoK',
+        'mobile': '0',
+        'ts': str(data_ts),
+        'id': '',
+        '_': '1234'
     }
-
     for index, episode in enumerate(max_episode_list):
-        params['id'] = episode
+        params['id'] = str(episode)
+        print(params)
         video_url = requests.get(video_finder, params=params).json()
         if video_url['error']:
             print(video_url['error'])
@@ -239,7 +229,7 @@ def get_description(description_soup):
     return title
 
 
-def fetch_movie_names(movie_soup):
+def fetch_movie_names(movie_soup, domain):
     movie_links = {}
     counter = 1
     movie_page = movie_soup.find_all(attrs={'class': 'row movie-list'})
@@ -249,12 +239,12 @@ def fetch_movie_names(movie_soup):
     title = None
     for index, each_link in enumerate(all_links):
         each_desc = all_desc[index].get('data-tip')
-        desc_url = "https://bmovies.to/" + each_desc
+        desc_url = domain + "/" + each_desc
         desc_response = requests.get(desc_url)
         soup = BeautifulSoup(desc_response.text, 'html.parser')
         title = get_description(soup)
         movie_links[counter] = {'title': title}
-        movie_links[counter]['href'] = "https://bmovies.to" + each_link.get('href')
+        movie_links[counter]['href'] = domain + each_link.get('href')
         if title:
             counter += 1
         if counter > 10:
@@ -262,14 +252,12 @@ def fetch_movie_names(movie_soup):
     return movie_links
 
 
-def get_magnet_link(movie_name):
-    if not movie_name:
-        movie_name = 'THE PUNISHER'
-    URL = 'https://bmovies.to/search?keyword='+movie_name.replace(' ', '+')
+def get_magnet_link(movie_name, domain):
+    URL = domain + '/search?keyword='+movie_name.replace(' ', '+')
 
     resp = requests.get(URL)
     soup = BeautifulSoup(resp.text, 'html.parser')
-    movie_list = fetch_movie_names(soup)
+    movie_list = fetch_movie_names(soup, domain)
     print("Below are the Movies:")
     for index, movie in movie_list.items():
         print('%s: %s' % (index, movie['title']))
@@ -278,21 +266,23 @@ def get_magnet_link(movie_name):
     return movie_list[int(selected_index)]['href']
 
 
-def main():
+def main(args):
     test_system()
-    movie = get_input()
+    movie = args.movie
+    if not movie:
+        movie = 'THE PUNISHER'
+    domain = args.domain
+    if not domain:
+        domain = "https://bmovies.to"
     print('Fetching Movies/T.V. series. Hang on..')
-    movie_url = get_magnet_link(movie)
+    movie_url = get_magnet_link(movie, domain)
     print('Fetching sources')
-    get_episodes(movie, movie_url)
-    # try:
-    #     print('Streaming Torrent')
-    #     command = 'peerflix "'+get_magnet_link(movie)+'" --vlc'
-    #     subprocess.check_call(command, shell=True)
-    # except Exception as e:
-    #     print(e)
-    #     exit()
+    get_episodes(movie, movie_url, domain)
 
 
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser(description='Download movies from fmovies/bmovies')
+    parser.add_argument('-m', '--movie', help='movie or tv series to download')
+    parser.add_argument('-d', '--domain', help='domain to download from')
+    args = parser.parse_args()
+    main(args)

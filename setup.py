@@ -13,6 +13,7 @@ setup(name="fmovies",
       install_requires=[
             'BeautifulSoup4',
             'requests',
+            'requests[security]',
             'youtube-dl'
       ],
       zip_safe=False)

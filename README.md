@@ -2,6 +2,7 @@
 
 
 Let's you download movies/episodes from [Bmovies](https://bmovies.is/).
+
 Don't wait for the stream to load.
 Download latest TV Series in 720p resolution and watch them at your leisure.
 
@@ -28,6 +29,15 @@ $ sudo pip install fmovies
 Or build from Source:
 
 ```
+$ pip install virtualenv
+```
+```
+$ virtualenv movies
+```
+```
+$ source movies/bin/activate
+```
+```
 $ git clone https://github.com/vaulstein/fmovies.git
 ```
 ```
@@ -50,3 +60,8 @@ Select the movie you want to watch:
 1. Fetch daily token dynamically
 2. Code re-factoring
 3. Deploy package on PyPi
+
+## KNOWN ISSUES
+
+Right now the code seems to download the wrong video. Working on fixing this.
+Please stay tuned.

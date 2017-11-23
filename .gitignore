@@ -9,3 +9,5 @@ lib
 lib64
 .idea
 bin
+build
+fmovies.egg-info
