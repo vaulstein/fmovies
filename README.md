@@ -1,7 +1,10 @@
 # FMOVIES
 
 
-Let's you choose the movies to stream
+Let's you download movies/episodes from [Bmovies](https://bmovies.is/).
+Don't wait for the stream to load.
+Download latest TV Series in 720p resolution and watch them at your leisure.
+
 
 # Installation
 
@@ -15,7 +18,7 @@ The script requires following dependencies and downloads them automatically.
 2. Beautiful Soup
 3. Youtube-dl
 
-Install using pip globally:
+Install using pip globally (**Not available yet**):
 
 ```
 $ sudo pip install fmovies
@@ -46,3 +49,4 @@ Select the movie you want to watch:
 
 1. Fetch daily token dynamically
 2. Code re-factoring
+3. Deploy package on PyPi
