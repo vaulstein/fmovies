@@ -161,19 +161,18 @@ def ask(question, answer=str_compat, default=None, l=None, options=None):
             'Argument `answer` must be str_compat, bool, or integer')
 
 
-
 def test_system():
     """Runs few tests to check if npm and peerflix is installed on the system."""
-    if subprocess.check_call('npm --version', shell=True) != 0:
-        print('NPM not installed installed, please read the Readme file for more information.')
+    if subprocess.check_call('python --version', shell=True) != 0:
+        print('Python not installed installed, please read the Readme file for more information.')
         exit()
-    if subprocess.check_call('peerflix --version', shell=True) != 0:
-        print('Peerflix not installed, installing..')
+    if subprocess.check_call('youtube-dl --version', shell=True) != 0:
+        print('Youtube-dl not installed, installing..')
         try:
-            subprocess.check_call('npm install -g peerflix', shell=True)
+            subprocess.check_call('pip install youtube-dl', shell=True)
         except subprocess.CalledProcessError as err:
             print('Installing as root user...')
-            subprocess.check_call('sudo npm install -g peerflix', shell=True)
+            subprocess.check_call('sudo pip install youtube-dl', shell=True)
 
 
 def get_input():
@@ -188,7 +187,13 @@ def get_input():
     return query
 
 
-def get_episodes(url):
+def download_episodes(movie_name, url, counter):
+    print('Downloading episode: {0} {1}'.format(movie_name, counter))
+    command = 'youtube-dl ' + url + ' -o "' + movie_name + ' Episode ' + str(counter) + '"'
+    subprocess.check_call(command, shell=True)
+
+
+def get_episodes(movie_name, url):
     resp = requests.get(url)
     soup = BeautifulSoup(resp.text, 'html.parser')
     data_ts_elem = soup.find("html")
@@ -206,20 +211,26 @@ def get_episodes(url):
         server_id = a['server_id']
         if a['count'] == max_episodes:
             for b in a['episode_list']:
-                max_episode_list.append(b.get('href'))
+                max_episode_list.append(b.get('href').split('/')[-1])
             break
     video_finder = "https://bmovies.to/grabber-api/"
     params = {
-        'token': 'IFmEgNFcXOoGvJbTmZ6BOB6E0M54yvgN5keGw7RT0xtCz8ZDkRX3WYwfhZnT//mmlwGaIHyZ39Hr1ThV0BZBTDr7IQG7avYOQU1Gs4I@B9rHHwXNnuBlTcZJkNqYzVIFA4KO@w==',
+        'token': 'IFmEgNFcXOoGvJbTmZ6BOB6E0M54yvgN5keGw7RT0xtC2Jsxpgzzd/k68q75/o/NkmSJB1W4nv/vwxFg4iUHD0L7IQG7avYOQUxUtIIgBNXPQAvWyOR5RdpVk8ebyk0CGomF8gFT',
         'server': server_id,
         'options': 'options',
         'mobile': 0,
         'ts': data_ts,
         '_': 2513,
-        'id': 'w007wl'
+        'id': ''
     }
-    video_url = requests.get(video_finder, params=params).json()
-    print(video_url['data'][-1]['file'])
+
+    for index, episode in enumerate(max_episode_list):
+        params['id'] = episode
+        video_url = requests.get(video_finder, params=params).json()
+        if video_url['error']:
+            print(video_url['error'])
+            sys.exit(0)
+        download_episodes(movie_name, video_url['data'][-1]['file'], index+1)
 
 
 def get_description(description_soup):
@@ -268,10 +279,12 @@ def get_magnet_link(movie_name):
 
 
 def main():
-    #test_system()
+    test_system()
     movie = get_input()
+    print('Fetching Movies/T.V. series. Hang on..')
     movie_url = get_magnet_link(movie)
-    get_episodes(movie_url)
+    print('Fetching sources')
+    get_episodes(movie, movie_url)
     # try:
     #     print('Streaming Torrent')
     #     command = 'peerflix "'+get_magnet_link(movie)+'" --vlc'

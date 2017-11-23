@@ -1,16 +1,18 @@
 
 from setuptools import setup
 
-setup(name="mstream",
-      version="0.2",
-      description="Instantly stream movies/ tv episodes you want to watch",
+setup(name="fmovies",
+      version="0.1",
+      description="Download movies/T.V. series from fmovies/bmovies",
       url="http://vaulstein.github.com",
       author="Vaulstein Rodrigues",
       author_email="vaulstein@gmail.com",
       license='MIT',
-      packages=["mstream"],
-      scripts=["bin/mstream"],
+      packages=["fmovies"],
+      scripts=["bin/fmovies"],
       install_requires=[
-        'BeautifulSoup4',
-        'requests'],
+            'BeautifulSoup4',
+            'requests',
+            'youtube-dl'
+      ],
       zip_safe=False)
