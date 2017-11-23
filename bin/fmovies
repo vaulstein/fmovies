@@ -215,7 +215,6 @@ def get_episodes(movie_name, url, domain):
     }
     for index, episode in enumerate(max_episode_list):
         params['id'] = str(episode)
-        print(params)
         video_url = requests.get(video_finder, params=params).json()
         if video_url['error']:
             print(video_url['error'])
@@ -263,6 +262,7 @@ def get_magnet_link(movie_name, domain):
         print('%s: %s' % (index, movie['title']))
     selected_index = ask('Select one number from the above list',
                          answer=list, default='1', options=range(1, 21))
+    print('You have selected {0} to download.'.format(movie_list[int(selected_index)]['title'])
     return movie_list[int(selected_index)]['href']
 
 
